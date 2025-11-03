@@ -30,7 +30,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### 2. Clone and setup project
 ```bash
 git clone [your-repo]
-cd graph_rag
+cd graph-rag-llm-transformer
 ```
 
 ### 3. Create environment and install dependencies
@@ -45,9 +45,43 @@ cp .env.example .env
 # Edit .env with your actual credentials
 ```
 
+### 5. Run the complete system 🚀
+```bash
+# Quick start - builds graph and runs demo
+uv run python main.py --full
+
+# Or use interactive menu
+uv run python main.py
+```
+
 ## Usage
 
-### **Step 1: Create the knowledge graph (REQUIRED FIRST)**
+### **🚀 Simple Usage (Recommended)**
+
+#### **Option 1: Interactive Menu**
+```bash
+uv run python main.py
+```
+Choose from menu options to build graph, run queries, or explore.
+
+#### **Option 2: Command Line Flags**
+```bash
+# Build knowledge graph only
+uv run python main.py --build
+
+# Interactive RAG queries
+uv run python main.py --query
+
+# Run demo queries
+uv run python main.py --demo
+
+# Full pipeline (build + demo)
+uv run python main.py --full
+```
+
+### **📚 Advanced Usage (Individual Scripts)**
+
+**Step 1: Create the knowledge graph (REQUIRED FIRST)**
 ```bash
 uv run python graph_builder.py
 ```
@@ -57,7 +91,7 @@ This script:
 - Automatically extracts entities and relationships
 - Stores the knowledge graph in Neo4j
 
-### **Step 2: Query and explore the graph**
+**Step 2: Query and explore the graph**
 ```bash
 uv run python graph_explorer.py
 ```
@@ -66,10 +100,23 @@ This script:
 - **Requires the database to have data from Step 1**
 - Offers predefined queries and custom Cypher query execution
 
+**Step 3: Advanced RAG Queries (NEW!)**
+```bash
+uv run python retrieve_and_query.py
+```
+This script:
+- **Implements Graph RAG (Retrieval-Augmented Generation)**
+- Uses GraphCypherQAChain for intelligent natural language queries
+- Automatically generates Cypher queries from natural language
+- Provides contextual answers based on graph relationships
+- **Requires the database to have data from Step 1**
+
 ### **Important Notes:**
-- ⚠️ **Always run `graph_builder.py` first** to populate the database
-- 🔄 Running `graph_builder.py` will clear and recreate the entire graph
+- ⚠️ **NEW: Use `main.py` for the best experience** 
+- 🎯 **Quick start: `uv run python main.py --full`** (builds graph + runs demo)
+- 🔄 Building the graph will clear and recreate all data
 - 💡 LLMGraphTransformer uses `id` property (not `name`) for entity names
+- 🚀 **Graph RAG provides intelligent natural language queries**
 
 ## Required Credentials
 
@@ -82,6 +129,8 @@ This script:
 - ✅ Zero manual schema configuration
 - ✅ Support for multiple languages (English/Spanish)
 - ✅ Interactive query interface
+- ✅ **Graph RAG (Retrieval-Augmented Generation)** 🆕
+- ✅ Natural language to Cypher query generation
 - ✅ Cloud-based graph database (Neo4j AuraDB)
 - ✅ Production-ready architecture
 
@@ -104,10 +153,11 @@ deactivate
 
 ## Future Roadmap
 
-### Phase 1: Enhanced Retrieval
-- [ ] Implement graph-based RAG retriever
-- [ ] Add similarity search with graph traversal
-- [ ] Integrate vector embeddings with graph relationships
+### Phase 1: Enhanced Retrieval ✅ COMPLETED
+- [x] Implement graph-based RAG retriever
+- [x] Add similarity search with graph traversal
+- [x] Integrate vector embeddings with graph relationships
+- [x] Natural language to Cypher query generation
 
 ### Phase 2: User Interface
 - [ ] Web-based graph visualization

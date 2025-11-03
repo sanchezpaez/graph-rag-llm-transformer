@@ -177,5 +177,20 @@ def main():
         print(f"   1. Edit the 'text' variable in this file")
         print(f"   2. Run: uv run python retriever_llm_transformer.py")
 
+def build_knowledge_graph() -> bool:
+    """
+    Main function to build the knowledge graph.
+    Can be called from other modules.
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        main()
+        return True
+    except Exception as e:
+        print(f"❌ Error building knowledge graph: {str(e)}")
+        return False
+
 if __name__ == "__main__":
     main()
