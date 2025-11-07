@@ -27,3 +27,42 @@ env/
 
 # UV specific
 uv.lock
+
+# Project specific - temporary data (for reproducibility)
+output/
+data/
+temp/
+*.txt
+
+# WALS data downloads
+wals-*.zip
+wals-master/
+cldf-datasets-*/
+
+# Neo4j data
+neo4j/
+
+# Temporary or backup files
+*.bak
+*.tmp
+*~
+*.bak
+*.tmp
+
+# Development logs (private)
+.changelog.md
+.devnotes.md
+.evolution.md
+*~
+
+# Neo4j dumps or exports
+*.dump
+
+# Jupyter notebooks (if any are created)
+*.ipynb_checkpoints
+
+# Keep these files in the repository:
+# - data/*.csv (WALS language data)
+# - main.py, wals.py, graph_builder.py, graph_explorer.py (core scripts)
+# - requirements.txt, README.md, .env.example
+# - .gitignore

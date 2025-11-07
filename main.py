@@ -1,187 +1,137 @@
 """
-Graph RAG System - Main Interface
-=================================
+Linguistic Graph RAG System
+============================
 
-Simple main script that orchestrates the Graph RAG pipeline:
-1. Build knowledge graph from text
-2. Query the graph using natural language
-
-Usage:
-    python main.py                    # Interactive mode with menu
-    python main.py --build            # Build graph only
-    python main.py --query            # Query mode only  
-    python main.py --demo             # Run demo queries
-    python main.py --full             # Build + demo queries
+Main orchestration script for building and querying knowledge graphs from WALS linguistic data.
+Supports multiple execution modes: data processing, graph building, and interactive queries.
 """
 
 import argparse
 import sys
-from typing import Optional
+from wals import WALSDataProcessor
+from graph_builder import GraphBuilder
+from graph_explorer import GraphExplorer
 
-def build_graph() -> bool:
-    """
-    Build the knowledge graph.
+def process_wals_data():
+    """Process WALS data and generate optimized chunks."""
+    print("🌍 Linguistic Graph RAG System")
+    print("=" * 40)
+    print("📁 Output directories ready")
     
-    Returns:
-        bool: True if successful, False otherwise
-    """
-    print("🏗️  Building Knowledge Graph...")
-    print("=" * 50)
+    processor = WALSDataProcessor()
     
-    try:
-        import graph_builder
-        if hasattr(graph_builder, 'build_knowledge_graph'):
-            return graph_builder.build_knowledge_graph()
-        else:
-            # If it's the current script style, just import and run
-            print("✅ Knowledge graph built successfully!")
-            return True
-            
-    except ImportError:
-        print("❌ Error: graph_builder.py not found!")
+    # Load WALS data
+    if not processor.load_data():
+        print("❌ Failed to load WALS data")
         return False
-    except Exception as e:
-        print(f"❌ Error building graph: {str(e)}")
-        return False
+    
+    processor.setup_output_structure()
+    
+    # Generate chunks
+    chunk_files = processor.generate_chunks()
+    print(f"✅ Generated {len(chunk_files)} chunks with WALS features")
+    
+    # Show statistics
+    stats = processor.get_statistics()
+    print(f"📊 Total languages: {stats['total_languages']}")
+    print(f"📊 Language families: {stats['total_families']}")
+    print(f"📊 Countries represented: {stats['total_countries']}")
+    
+    return len(chunk_files) > 0
 
-def run_queries(interactive: bool = True) -> bool:
-    """
-    Run RAG queries on the knowledge graph.
-    
-    Args:
-        interactive: If True, run interactive queries. If False, run demo queries.
-        
-    Returns:
-        bool: True if successful, False otherwise
-    """
-    print("🤖 Starting RAG Query System...")
-    print("=" * 50)
-    
-    try:
-        from retrieve_and_query import setup_rag_system, query_and_synthesize, run_sample_queries
-        
-        if not interactive:
-            # Run demo queries
-            run_sample_queries()
-            return True
-        
-        # Interactive mode
-        cypher_chain = setup_rag_system()
-        if not cypher_chain:
-            print("❌ Failed to setup RAG system")
-            return False
-            
-        print("✅ RAG system ready!")
-        print("\n💡 Ask questions about your knowledge graph")
-        print("📝 Type 'quit' to exit")
-        print("-" * 50)
-        
-        while True:
-            try:
-                query = input("\n🤔 Your question: ").strip()
-                
-                if query.lower() in ['quit', 'exit', 'q']:
-                    break
-                    
-                if query:
-                    answer = query_and_synthesize(query, cypher_chain)
-                    print(f"💡 Answer: {answer}")
-                else:
-                    print("❌ Please enter a valid question")
-                    
-            except KeyboardInterrupt:
-                break
-                
-        return True
-        
-    except ImportError:
-        print("❌ Error: retrieve_and_query.py not found!")
-        return False
-    except Exception as e:
-        print(f"❌ Error in query system: {str(e)}")
-        return False
-
-def show_menu() -> str:
-    """Show interactive menu and get user choice."""
-    print("\n🎯 Graph RAG System")
+def build_knowledge_graph():
+    """Build the knowledge graph from processed chunks."""
+    print("\n🏗️  Building Knowledge Graph")
     print("=" * 30)
-    print("1. Build Knowledge Graph")
-    print("2. Query Graph (Interactive)")
-    print("3. Run Demo Queries")
-    print("4. Full Pipeline (Build + Demo)")
-    print("5. Exit")
-    print("-" * 30)
     
-    while True:
-        choice = input("� Choose option (1-5): ").strip()
-        if choice in ['1', '2', '3', '4', '5']:
-            return choice
-        print("❌ Invalid choice. Please enter 1-5.")
+    builder = GraphBuilder()
+    
+    # Initialize connections
+    if not builder.connect_to_neo4j():
+        return False
+    
+    if not builder.setup_llm_transformer():
+        return False
+    
+    # Build graph from chunks
+    print("🔍 Building from chunks with linguistic features...")
+    nodes, relationships = builder.build_from_enhanced_chunks()
+    
+    if nodes == 0:
+        print("❌ No graph elements created")
+        return False
+    
+    # Show final statistics
+    stats = builder.get_graph_statistics()
+    print(f"\n📊 Final Graph Statistics:")
+    print(f"   Languages: {stats.get('language_count', 0)}")
+    print(f"   Countries: {stats.get('country_count', 0)}")
+    print(f"   Language Families: {stats.get('languagefamily_count', 0)}")
+    
+    return True
+
+def interactive_query_mode():
+    """Start interactive query session."""
+    print("\n🔍 Query Mode")
+    print("=" * 30)
+    
+    explorer = GraphExplorer()
+    
+    # Initialize
+    if not explorer.connect_to_neo4j():
+        return False
+    
+    # Setup LLM for natural language queries
+    if not explorer.setup_qa_chain():
+        print("⚠️  LLM not available, using predefined queries only")
+    
+    # Start interactive session
+    explorer.interactive_query()
+    return True
 
 def main():
-    """Main function to orchestrate the Graph RAG system."""
-    
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Graph RAG System')
-    parser.add_argument('--build', action='store_true', help='Build knowledge graph only')
-    parser.add_argument('--query', action='store_true', help='Interactive query mode')
-    parser.add_argument('--demo', action='store_true', help='Run demo queries')
-    parser.add_argument('--full', action='store_true', help='Build graph + run demo')
+    """Main function with argument parsing."""
+    parser = argparse.ArgumentParser(description="Linguistic Graph RAG System")
+    parser.add_argument(
+        "--mode", 
+        choices=["full", "process", "build", "query"],
+        default="full",
+        help="Execution mode: full (all steps), process (data only), build (graph only), query (queries only)"
+    )
     
     args = parser.parse_args()
     
-    # Command line mode
-    if args.build:
-        success = build_graph()
-        sys.exit(0 if success else 1)
-        
-    elif args.query:
-        success = run_queries(interactive=True)
-        sys.exit(0 if success else 1)
-        
-    elif args.demo:
-        success = run_queries(interactive=False)
-        sys.exit(0 if success else 1)
-        
-    elif args.full:
-        print("🚀 Running Full Pipeline...")
-        if build_graph():
-            print("\n" + "="*50)
-            success = run_queries(interactive=False)
-            sys.exit(0 if success else 1)
-        else:
-            sys.exit(1)
-    
-    # Interactive menu mode (default)
     try:
-        while True:
-            choice = show_menu()
+        if args.mode == "full":
+            # Complete pipeline
+            print("🚀 Running complete pipeline...")
+            if not process_wals_data():
+                sys.exit(1)
+            if not build_knowledge_graph():
+                sys.exit(1)
+            interactive_query_mode()
             
-            if choice == '1':
-                build_graph()
-                input("\n📎 Press Enter to continue...")
+        elif args.mode == "process":
+            # Data processing only
+            if not process_wals_data():
+                sys.exit(1)
                 
-            elif choice == '2':
-                run_queries(interactive=True)
+        elif args.mode == "build":
+            # Graph building only
+            if not build_knowledge_graph():
+                sys.exit(1)
                 
-            elif choice == '3':
-                run_queries(interactive=False)
-                input("\n📎 Press Enter to continue...")
-                
-            elif choice == '4':
-                print("🚀 Running Full Pipeline...")
-                if build_graph():
-                    print("\n" + "="*50)
-                    run_queries(interactive=False)
-                input("\n📎 Press Enter to continue...")
-                
-            elif choice == '5':
-                print("👋 Goodbye!")
-                break
-                
+        elif args.mode == "query":
+            # Query mode only
+            if not interactive_query_mode():
+                sys.exit(1)
+    
     except KeyboardInterrupt:
         print("\n👋 Goodbye!")
         sys.exit(0)
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

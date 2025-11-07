@@ -1,177 +1,100 @@
-# Graph RAG with LLMGraphTransformer
+# WALS Knowledge Graph 🌍
 
-Automatic Knowledge Graph generation and retrieval system using **LangChain's LLMGraphTransformer**, **Neo4j AuraDB**, and **OpenAI**.
+A comprehensive Graph RAG system for exploring World Atlas of Language Structures (WALS) data through intelligent natural language queries. Built with LangChain, Neo4j, and OpenAI GPT.
 
-## Overview
+## Quick Start
 
-This project implements a complete Graph RAG (Retrieval-Augmented Generation) pipeline that automatically extracts entities and relationships from text documents and stores them in a Neo4j graph database. Unlike traditional RAG systems that rely on vector similarity, Graph RAG leverages the semantic relationships between entities to provide more contextual and accurate information retrieval.
-
-### Key Technologies
-
-- **LangChain**: Provides the LLMGraphTransformer for automated knowledge graph construction from unstructured text
-- **Neo4j AuraDB**: Cloud-hosted graph database offering powerful graph query capabilities with Cypher
-- **OpenAI GPT**: Drives the intelligent entity and relationship extraction process
-- **UV Package Manager**: Ensures reproducible Python environments and dependency management
-
-### Benefits
-
-- **Automatic Schema Discovery**: No manual entity/relationship definition required
-- **Semantic Relationships**: Captures complex connections between concepts that vector search might miss
-- **Scalable Architecture**: Cloud-based Neo4j AuraDB handles large-scale graph operations
-- **Production Ready**: Built on enterprise-grade tools (LangChain, Neo4j, OpenAI)
-
-## Quick Setup
-
-### 1. Install UV package manager
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# 1. Setup
+git clone [repo-url] && cd graph-rag-llm-transformer
+uv sync
+cp .env.example .env  # Add Neo4j + OpenAI keys
+
+# 2. Build knowledge graph (first time only)
+uv run python main.py --mode build
+
+# 3. Start interactive queries
+uv run python main.py --mode query
 ```
 
-### 2. Clone and setup project
+### Pipeline Options
 ```bash
-git clone [your-repo]
-cd graph-rag-llm-transformer
+uv run python main.py --mode full     # Complete: build + query
+uv run python main.py --mode process  # WALS data processing only
+uv run python main.py --mode build    # Graph building only
+uv run python main.py --mode query    # Interactive queries only
 ```
-
-### 3. Create environment and install dependencies
-```bash
-uv venv .venv --python 3.11
-uv pip install -r requirements.txt
-```
-
-### 4. Configure environment variables
-```bash
-cp .env.example .env
-# Edit .env with your actual credentials
-```
-
-### 5. Run the complete system 🚀
-```bash
-# Quick start - builds graph and runs demo
-uv run python main.py --full
-
-# Or use interactive menu
-uv run python main.py
-```
-
-## Usage
-
-### **🚀 Simple Usage (Recommended)**
-
-#### **Option 1: Interactive Menu**
-```bash
-uv run python main.py
-```
-Choose from menu options to build graph, run queries, or explore.
-
-#### **Option 2: Command Line Flags**
-```bash
-# Build knowledge graph only
-uv run python main.py --build
-
-# Interactive RAG queries
-uv run python main.py --query
-
-# Run demo queries
-uv run python main.py --demo
-
-# Full pipeline (build + demo)
-uv run python main.py --full
-```
-
-### **📚 Advanced Usage (Individual Scripts)**
-
-**Step 1: Create the knowledge graph (REQUIRED FIRST)**
-```bash
-uv run python graph_builder.py
-```
-This script:
-- Connects to Neo4j and clears any existing data
-- Processes the input text using LLMGraphTransformer
-- Automatically extracts entities and relationships
-- Stores the knowledge graph in Neo4j
-
-**Step 2: Query and explore the graph**
-```bash
-uv run python graph_explorer.py
-```
-This script:
-- Provides an interactive menu for graph exploration
-- **Requires the database to have data from Step 1**
-- Offers predefined queries and custom Cypher query execution
-
-**Step 3: Advanced RAG Queries (NEW!)**
-```bash
-uv run python retrieve_and_query.py
-```
-This script:
-- **Implements Graph RAG (Retrieval-Augmented Generation)**
-- Uses GraphCypherQAChain for intelligent natural language queries
-- Automatically generates Cypher queries from natural language
-- Provides contextual answers based on graph relationships
-- **Requires the database to have data from Step 1**
-
-### **Important Notes:**
-- ⚠️ **NEW: Use `main.py` for the best experience** 
-- 🎯 **Quick start: `uv run python main.py --full`** (builds graph + runs demo)
-- 🔄 Building the graph will clear and recreate all data
-- 💡 LLMGraphTransformer uses `id` property (not `name`) for entity names
-- 🚀 **Graph RAG provides intelligent natural language queries**
-
-## Required Credentials
-
-1. **OpenAI API Key**: Get one at https://platform.openai.com/api-keys
-2. **Neo4j AuraDB**: Create a free instance at https://neo4j.com/cloud/aura/
 
 ## Features
 
-- ✅ Automatic entity and relationship extraction
-- ✅ Zero manual schema configuration
-- ✅ Support for multiple languages (English/Spanish)
-- ✅ Interactive query interface
-- ✅ **Graph RAG (Retrieval-Augmented Generation)** 🆕
-- ✅ Natural language to Cypher query generation
-- ✅ Cloud-based graph database (Neo4j AuraDB)
-- ✅ Production-ready architecture
+- **Large Coverage of WALS Dataset**: 2,639 languages from World Atlas of Language Structures
+- **Natural Language Queries**: "What languages are spoken in Spain?" → 15 languages
+- **Smart Country Mapping**: "Germany" → "DE", "France" → "FR" automatic conversion
+- **Geographic Queries**: Search by country, region, or macroarea
+- **Family Queries**: Explore linguistic families and classifications
+- **4 Query Modes**: Statistics, Geographic, Families, Advanced Cypher
 
-## Troubleshooting
+## Example Queries
 
-If you encounter nested environment issues, always use:
-```bash
-uv run python [script_name].py
+- **Geographic**: "Spain" → 15 languages | "France" → 7 languages | "Africa" → 547 languages
+- **Families**: "Romance" → 24 languages | "Germanic" → 20+ languages | "Niger-Congo" → 190+ languages
+- **Statistics**: Regional distribution, top families, data coverage insights
+
+## Architecture
+
+```
+main.py              # Main orchestrator and mode selection
+├── graph_builder.py # WALS data processing → Neo4j graph
+├── graph_explorer.py # Interactive query interface with LLM integration
+└── wals.py          # WALS data processing utilities
 ```
 
-Instead of manually activating environments.
+**Graph Structure**: Single `Language` node type with properties: `id`, `family`, `genus`, `country_id`, `macroarea`, `coordinates`
 
-**Manual activation (alternative):**
-```bash
-source .venv/bin/activate
-python graph_builder.py
-python graph_explorer.py
-deactivate
-```
+## Performance
+
+- **Coverage**: 2,639 out of 3,573 languages (73.8%)
+- **Build Time**: ~45 minutes for full dataset
+- **Success Rate**: 99.3% chunk processing
+- **Geographic Coverage**: 100+ countries across 6 macroareas
+
+## Requirements
+
+- **Neo4j AuraDB**: Create free instance at https://neo4j.com/cloud/aura/
+- **OpenAI API Key**: Get one at https://platform.openai.com/api-keys
+- **Python 3.11+** with uv package manager
 
 ## Future Roadmap
 
-### Phase 1: Enhanced Retrieval ✅ COMPLETED
-- [x] Implement graph-based RAG retriever
-- [x] Add similarity search with graph traversal
-- [x] Integrate vector embeddings with graph relationships
-- [x] Natural language to Cypher query generation
+**Enhanced Queries**:
+- Bidirectional queries (language → countries where spoken)
+- Multi-country mapping and complex geographic filters
+- Advanced linguistic feature queries
 
-### Phase 2: User Interface
-- [ ] Web-based graph visualization
-- [ ] Interactive query builder
-- [ ] Real-time graph exploration
+**Data Expansion**:
+- Additional linguistic features from WALS
+- Speaker population data
+- Language endangerment status
+- Etymological relationships
 
-### Phase 3: Advanced Features
-- [ ] Multi-document graph merging
-- [ ] Incremental graph updates
-- [ ] Custom entity/relationship types
-- [ ] Graph-based summarization
+**UI Improvements**:
+- Web-based interface
+- Interactive maps and visualizations
+- Query builder with autocomplete
+- Export capabilities (CSV, JSON)
 
-### Phase 4: Production Enhancements
-- [ ] Batch processing capabilities
-- [ ] API endpoint creation
-- [ ] Performance optimization
-- [ ] Monitoring and analytics
+**Advanced Features**:
+- Voice query interface
+- API endpoints for external integration
+- Performance optimization and caching
+- Comprehensive testing and monitoring
+
+## Data Source
+
+This project uses data from the World Atlas of Language Structures (WALS):
+
+**Dryer, Matthew S. & Haspelmath, Martin (eds.) 2013. The World Atlas of Language Structures Online. Leipzig: Max Planck Institute for Evolutionary Anthropology.** (Available online at https://wals.info)
+
+## License
+
+MIT License
